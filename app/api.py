@@ -25,7 +25,7 @@ app.include_router(diagnostic_router)
 
 
 @app.on_event("startup")
-async def startup_event():
+def startup_event():
     """Initialize on startup"""
     print("MySQL RCA API starting up...")
     if db_manager.test_connection():
@@ -35,14 +35,14 @@ async def startup_event():
 
 
 @app.on_event("shutdown")
-async def shutdown_event():
+def shutdown_event():
     """Cleanup on shutdown"""
     print("MySQL RCA API shutting down...")
     db_manager.close()
 
 
 @app.get("/")
-async def root():
+def root():
     """Root endpoint"""
     return {
         "message": "MySQL RCA API",
@@ -52,7 +52,7 @@ async def root():
 
 
 @app.get("/status")
-async def status():
+def status():
     """Get system status"""
     return {
         "status": "running",

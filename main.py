@@ -1,10 +1,9 @@
 """Main application entry point for MySQL RCA using deepagents"""
-import asyncio
 from app.agents.main_agent import diagnose_database
 from app.core.database import db_manager
 
 
-async def main():
+def main():
     """Run MySQL RCA diagnostic using deepagents"""
     print("Starting MySQL RCA Diagnostic System (deepagents Multi-Agent)\n")
 
@@ -45,4 +44,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

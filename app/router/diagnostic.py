@@ -39,7 +39,7 @@ class PerformanceMetrics(BaseModel):
 
 
 @router.get("/health", response_model=HealthCheckResponse)
-async def health_check():
+def health_check():
     """Check system health"""
     db_connected = db_manager.test_connection()
 
@@ -50,7 +50,7 @@ async def health_check():
 
 
 @router.post("/analyze", response_model=AnalysisResult)
-async def analyze_issue(request: DiagnosticRequest):
+def analyze_issue(request: DiagnosticRequest):
     """Analyze a database issue using deepagents multi-agent system"""
     try:
         result = diagnose_database(request.issue_description or "")
@@ -74,7 +74,7 @@ async def analyze_issue(request: DiagnosticRequest):
 
 
 @router.get("/report")
-async def get_report(issue: Optional[str] = None):
+def get_report(issue: Optional[str] = None):
     """Get detailed diagnostic report from deepagents analysis"""
     try:
         result = diagnose_database(issue or "General MySQL database diagnosis")
@@ -94,7 +94,7 @@ async def get_report(issue: Optional[str] = None):
 
 
 @router.get("/metrics", response_model=PerformanceMetrics)
-async def get_performance_metrics():
+def get_performance_metrics():
     """Get current performance metrics"""
     try:
         from app.agents.subagents import PerformanceAnalyzer
@@ -117,7 +117,7 @@ async def get_performance_metrics():
 
 
 @router.get("/slow-queries")
-async def get_slow_queries(limit: int = 10):
+def get_slow_queries(limit: int = 10):
     """Get slow queries"""
     try:
         queries = db_manager.get_slow_queries(limit=limit)
@@ -127,7 +127,7 @@ async def get_slow_queries(limit: int = 10):
 
 
 @router.get("/table-stats")
-async def get_table_statistics():
+def get_table_statistics():
     """Get table statistics"""
     try:
         stats = db_manager.get_table_statistics()
@@ -137,7 +137,7 @@ async def get_table_statistics():
 
 
 @router.get("/lock-info")
-async def get_lock_info():
+def get_lock_info():
     """Get lock information"""
     try:
         locks = db_manager.get_lock_info()
@@ -147,7 +147,7 @@ async def get_lock_info():
 
 
 @router.get("/process-list")
-async def get_process_list():
+def get_process_list():
     """Get current process list"""
     try:
         processes = db_manager.get_process_list()
