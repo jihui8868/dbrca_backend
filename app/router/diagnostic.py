@@ -1,9 +1,9 @@
-"""API routes for MySQL RCA diagnostics"""
+"""API routes for MySQL RCA diagnostics using deepagents"""
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 
-from app.agents.root_cause_analyzer import RootCauseAnalyzer
+from app.agents.main_agent import diagnose_database, create_rca_agent
 from app.core.database import db_manager
 
 router = APIRouter(prefix="/api/v1/diagnostic", tags=["diagnostic"])
@@ -38,9 +38,6 @@ class PerformanceMetrics(BaseModel):
     buffer_pool_hit_ratio: str
 
 
-analyzer = RootCauseAnalyzer()
-
-
 @router.get("/health", response_model=HealthCheckResponse)
 async def health_check():
     """Check system health"""
@@ -54,27 +51,44 @@ async def health_check():
 
 @router.post("/analyze", response_model=AnalysisResult)
 async def analyze_issue(request: DiagnosticRequest):
-    """Analyze a database issue"""
+    """Analyze a database issue using deepagents multi-agent system"""
     try:
-        diagnosis = analyzer.diagnose(request.issue_description or "")
+        result = diagnose_database(request.issue_description or "")
+
+        if result["status"] == "error":
+            raise HTTPException(status_code=500, detail=result.get("message", "Analysis failed"))
+
+        analysis_text = result.get("analysis", "")
 
         return AnalysisResult(
-            status=diagnosis.get("status", "complete"),
-            issue_description=diagnosis.get("issue_description"),
-            findings_summary=diagnosis.get("findings_summary", {}),
-            recommendations=diagnosis.get("recommendations", []),
-            analysis=diagnosis.get("analysis") if request.detailed else None
+            status="complete",
+            issue_description=result.get("issue_description"),
+            findings_summary={},
+            recommendations=[],
+            analysis=analysis_text if request.detailed else None
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 
 @router.get("/report")
 async def get_report(issue: Optional[str] = None):
-    """Get detailed diagnostic report"""
+    """Get detailed diagnostic report from deepagents analysis"""
     try:
-        report = analyzer.get_diagnostic_report(issue or "")
-        return {"report": report}
+        result = diagnose_database(issue or "General MySQL database diagnosis")
+
+        if result["status"] == "error":
+            raise HTTPException(status_code=500, detail=result.get("message"))
+
+        return {
+            "report": result.get("analysis", ""),
+            "status": result["status"],
+            "issue": result.get("issue_description")
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
 

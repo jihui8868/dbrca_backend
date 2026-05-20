@@ -1,12 +1,12 @@
-"""Main application entry point for MySQL RCA"""
+"""Main application entry point for MySQL RCA using deepagents"""
 import asyncio
-from app.agents.root_cause_analyzer import RootCauseAnalyzer
+from app.agents.main_agent import diagnose_database
 from app.core.database import db_manager
 
 
 async def main():
-    """Run MySQL RCA diagnostic"""
-    print("Starting MySQL RCA Diagnostic System...\n")
+    """Run MySQL RCA diagnostic using deepagents"""
+    print("Starting MySQL RCA Diagnostic System (deepagents Multi-Agent)\n")
 
     # Test database connection
     print("Testing database connection...")
@@ -17,30 +17,31 @@ async def main():
 
     print("✓ Database connection successful\n")
 
-    # Initialize Root Cause Analyzer
-    analyzer = RootCauseAnalyzer()
-
     # Example issue descriptions to diagnose
     issue_descriptions = [
         "Database queries are running slowly",
-        "High memory usage detected",
-        "Connection timeout errors occurring",
     ]
 
     # Run diagnostic for each issue
-    for issue in issue_descriptions[:1]:  # Run first issue as example
+    for issue in issue_descriptions:
         print(f"Diagnosing: {issue}")
-        print("-" * 50)
+        print("=" * 60)
 
         try:
-            report = analyzer.get_diagnostic_report(issue)
-            print(report)
+            result = diagnose_database(issue)
+
+            if result["status"] == "success":
+                print(result.get("analysis", ""))
+            else:
+                print(f"Error: {result['message']}")
+
         except Exception as e:
             print(f"Error during diagnosis: {e}")
             import traceback
             traceback.print_exc()
 
-    print("\nDiagnostic complete!")
+    print("\n" + "=" * 60)
+    print("Diagnostic complete!")
 
 
 if __name__ == "__main__":

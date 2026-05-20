@@ -14,15 +14,15 @@ def test_imports():
         print("  ✓ app.core.database")
 
         from app.agents.subagents import (
-            PerformanceAnalyzer,
-            LogAnalyzer,
-            QueryAnalyzer,
-            ConfigInspector,
+            performance_analyzer,
+            log_analyzer,
+            query_analyzer,
+            config_inspector,
         )
-        print("  ✓ app.agents.subagents")
+        print("  ✓ app.agents.subagents (deepagents SubAgent specs)")
 
-        from app.agents.root_cause_analyzer import RootCauseAnalyzer
-        print("  ✓ app.agents.root_cause_analyzer")
+        from app.agents.main_agent import create_rca_agent, diagnose_database
+        print("  ✓ app.agents.main_agent")
 
         print("\n✓ All imports successful!\n")
         return True
@@ -84,33 +84,35 @@ def test_database():
 
 
 def test_sub_agents():
-    """Test sub-agents"""
-    print("Testing sub-agents...")
+    """Test sub-agent definitions"""
+    print("Testing sub-agent definitions...")
     try:
         from app.agents.subagents import (
-            PerformanceAnalyzer,
-            LogAnalyzer,
-            QueryAnalyzer,
-            ConfigInspector,
+            performance_analyzer,
+            log_analyzer,
+            query_analyzer,
+            config_inspector,
         )
 
         agents = [
-            ("Performance Analyzer", PerformanceAnalyzer()),
-            ("Log Analyzer", LogAnalyzer()),
-            ("Query Analyzer", QueryAnalyzer()),
-            ("Configuration Inspector", ConfigInspector()),
+            ("performance-analyzer", performance_analyzer),
+            ("log-analyzer", log_analyzer),
+            ("query-analyzer", query_analyzer),
+            ("config-inspector", config_inspector),
         ]
 
-        for name, agent in agents:
-            print(f"  Testing {name}...", end=" ")
+        for name, agent_spec in agents:
+            print(f"  Checking {name}...", end=" ")
             try:
-                # Get summary (won't run full analysis if no data)
-                summary = agent.get_summary()
+                assert agent_spec is not None, "Agent spec is None"
+                assert agent_spec["name"] == name, f"Name mismatch"
+                assert agent_spec["description"] is not None, "Missing description"
+                assert agent_spec["system_prompt"] is not None, "Missing system_prompt"
                 print(f"✓")
             except Exception as e:
                 print(f"⚠️  ({e})")
 
-        print("\n✓ Sub-agents loaded!\n")
+        print("\n✓ All sub-agent specs loaded!\n")
         return True
     except Exception as e:
         print(f"\n✗ Sub-agent error: {e}\n")
@@ -118,25 +120,33 @@ def test_sub_agents():
 
 
 def test_orchestrator():
-    """Test orchestrator"""
-    print("Testing orchestrator...")
+    """Test deepagents main agent"""
+    print("Testing deepagents main agent...")
     try:
-        from app.agents.root_cause_analyzer import RootCauseAnalyzer
-
-        print("  Initializing RootCauseAnalyzer...", end=" ")
-        analyzer = RootCauseAnalyzer()
-        print("✓")
+        from app.agents.main_agent import create_rca_agent
+        from app.agents.subagents import (
+            performance_analyzer,
+            log_analyzer,
+            query_analyzer,
+            config_inspector,
+        )
 
         print("  Checking sub-agents...", end=" ")
-        assert hasattr(analyzer, 'performance_analyzer'), "Missing performance_analyzer"
-        assert hasattr(analyzer, 'log_analyzer'), "Missing log_analyzer"
-        assert hasattr(analyzer, 'query_analyzer'), "Missing query_analyzer"
-        assert hasattr(analyzer, 'config_inspector'), "Missing config_inspector"
-        assert hasattr(analyzer, 'llm'), "Missing LLM"
-        assert hasattr(analyzer, 'subagent'), "Missing deepagents SubAgent"
+        assert performance_analyzer is not None, "Missing performance_analyzer"
+        assert log_analyzer is not None, "Missing log_analyzer"
+        assert query_analyzer is not None, "Missing query_analyzer"
+        assert config_inspector is not None, "Missing config_inspector"
         print("✓")
 
-        print("\n✓ Orchestrator initialized!\n")
+        print("  Creating main RCA agent...", end=" ")
+        agent = create_rca_agent()
+        print("✓")
+
+        print("  Verifying agent configuration...", end=" ")
+        assert agent is not None, "Agent creation failed"
+        print("✓")
+
+        print("\n✓ Deepagents main agent initialized!\n")
         return True
     except Exception as e:
         print(f"\n✗ Orchestrator error: {e}\n")

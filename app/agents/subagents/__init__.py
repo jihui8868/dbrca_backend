@@ -1,12 +1,12 @@
-"""Sub-agents for specialized MySQL analysis"""
-from .performance_analyzer import PerformanceAnalyzer
-from .log_analyzer import LogAnalyzer
-from .query_analyzer import QueryAnalyzer
-from .config_inspector import ConfigInspector
+"""Sub-agents for MySQL RCA using deepagents framework"""
+from .performance_analyzer import performance_analyzer
+from .log_analyzer import log_analyzer
+from .query_analyzer import query_analyzer
+from .config_inspector import config_inspector
 
 __all__ = [
-    "PerformanceAnalyzer",
-    "LogAnalyzer",
-    "QueryAnalyzer",
-    "ConfigInspector",
+    "performance_analyzer",
+    "log_analyzer",
+    "query_analyzer",
+    "config_inspector",
 ]
