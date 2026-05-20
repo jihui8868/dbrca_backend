@@ -1,6 +1,10 @@
-# MySQL RCA - Multi-Agent Root Cause Analysis System
+# Multi-Database RCA - Multi-Agent Root Cause Analysis System
 
-A sophisticated multi-agent system for automated MySQL database diagnosis and root cause analysis using deepagents framework.
+A sophisticated multi-agent system for automated database diagnosis and root cause analysis using deepagents framework.
+
+**支持的数据库:** MySQL, PostgreSQL, Informix, MariaDB, Oracle, SQL Server  
+**支持的 LLM:** OpenAI, Deepseek, Anthropic Claude, Ollama  
+**框架:** deepagents + FastAPI
 
 ## Architecture
 
@@ -94,31 +98,65 @@ uv sync
 
 ### Configuration
 
-Set environment variables:
+Set environment variables. See [doc/同步模式改造完成报告.md](./doc/同步模式改造完成报告.md) for detailed setup.
 
+#### Database Configuration
 ```bash
-# Database
-export MYSQL_HOST=localhost
-export MYSQL_PORT=3306
-export MYSQL_USER=root
-export MYSQL_PASSWORD=your_password
-export MYSQL_DATABASE=mysql
+# Method 1: Individual parameters
+export DATABASE_TYPE=mysql                    # mysql, postgresql, informix, etc.
+export DB_HOST=localhost
+export DB_PORT=3306
+export DB_USER=root
+export DB_PASSWORD=your_password
+export DB_NAME=testdb
 
-# Database pool
-export MYSQL_POOL_SIZE=5
-export MYSQL_MAX_OVERFLOW=10
+# Method 2: Complete DSN
+export DATABASE_URL=mysql+pymysql://root:password@localhost:3306/testdb
+```
 
-# LLM
-export OPENAI_API_KEY=your_api_key
-export LLM_MODEL=gpt-4
+#### LLM Configuration
+```bash
+# Provider selection
+export LLM_PROVIDER=openai                    # openai, deepseek, anthropic, ollama
+export LLM_MODEL=openai:gpt-4                 # format: provider:model-name
+
+# API Keys (choose based on provider)
+export OPENAI_API_KEY=sk-xxx...               # For OpenAI
+export DEEPSEEK_API_KEY=sk-xxx...             # For Deepseek
+export ANTHROPIC_API_KEY=sk-ant-xxx...        # For Anthropic
+# Ollama: no API key needed
+
+# Model parameters
 export LLM_TEMPERATURE=0.7
 export LLM_MAX_TOKENS=2048
+export LLM_TIMEOUT=30
+export LLM_MAX_RETRIES=3
+```
 
-# Agents
+#### Agent Configuration
+```bash
 export AGENT_MAX_ITERATIONS=10
 export AGENT_TIMEOUT=300
 export AGENT_VERBOSE=true
 export AGENT_DEBUG=false
+```
+
+### Installation Options
+```bash
+# Basic install (OpenAI + MySQL)
+pip install -e .
+
+# With Anthropic support
+pip install -e .[anthropic]
+
+# With all LLM providers
+pip install -e .[all-llms]
+
+# With all database drivers
+pip install -e .[all-databases]
+
+# Complete setup
+pip install -e .[all]
 ```
 
 ## Usage
@@ -203,8 +241,39 @@ SHOW VARIABLES LIKE 'performance_schema';
 - 🔍 Intelligent query analysis and optimization
 - ⚙️ Configuration validation and recommendations
 - 📈 Lock contention and replication monitoring
-- 🧠 LLM-powered root cause analysis
+- 🧠 LLM-powered root cause analysis (Multiple providers)
 - 📋 Comprehensive diagnostic reports
+- 💾 Multi-database support (MySQL, PostgreSQL, Informix, etc.)
+- 🎯 Multiple LLM providers (OpenAI, Deepseek, Anthropic, Ollama)
+- 🐍 Synchronous mode for easy debugging
+
+## 📚 Documentation
+
+All documentation is located in the `doc/` directory. Quick links:
+
+### Getting Started
+- [Sync Mode Report (中文)](./doc/同步模式改造完成报告.md) - Quick start guide
+- [Quick Start LLM](./doc/QUICK_START_LLM.md) - Setup LLM providers
+- [Quick Start](./doc/QUICKSTART.md) - Initial setup
+
+### Debugging
+- [Debug Guide](./doc/DEBUG_GUIDE.md) - Complete debugging guide
+- [Sync Mode Migration](./doc/SYNC_MODE_MIGRATION.md) - Synchronous mode details
+
+### Multi-Database
+- [Multi-Database Support](./doc/MULTI_DATABASE_SUPPORT.md) - Database configuration
+- [Multi-Database Checklist](./doc/MULTI_DATABASE_CHECKLIST.md) - Verification
+
+### Multi-LLM
+- [LLM Integration Summary](./doc/LLM_INTEGRATION_SUMMARY.md) - Technical details
+- [Usage Examples](./doc/USAGE_EXAMPLES.md) - Real-world scenarios
+
+### Architecture
+- [Architecture](./doc/ARCHITECTURE.md) - System design
+- [Project Structure](./doc/PROJECT_STRUCTURE.md) - File organization
+
+### Complete Index
+📖 **See [doc/INDEX.md](./doc/INDEX.md) for complete documentation index**
 
 ## Extending the System
 
