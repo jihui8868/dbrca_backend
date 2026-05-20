@@ -15,6 +15,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# LLM Providers (langchain-openai is already in main dependencies for OpenAI + Deepseek)
+anthropic = ["langchain-anthropic>=0.2.0"]
+ollama = ["langchain-ollama>=0.1.0"]
+all-llms = [
+    "langchain-anthropic>=0.2.0",
+    "langchain-ollama>=0.1.0",
+]
+
 # Additional database drivers
 postgres = ["psycopg2-binary>=2.9.0"]
 informix = ["pyodbc>=4.1.0"]
@@ -36,4 +44,14 @@ all-databases = [
     "pyodbc>=4.1.0",            # Informix/ODBC
     "cx_oracle>=8.3.0",         # Oracle
     "pymssql>=2.2.0",           # SQL Server
+]
+
+# Complete setup with all providers and drivers
+all = [
+    "langchain-anthropic>=0.2.0",
+    "langchain-ollama>=0.1.0",
+    "psycopg2-binary>=2.9.0",
+    "pyodbc>=4.1.0",
+    "cx_oracle>=8.3.0",
+    "pymssql>=2.2.0",
 ]

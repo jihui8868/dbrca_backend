@@ -1,4 +1,4 @@
-"""Main RCA Agent using deepagents - Orchestrator for MySQL Diagnosis"""
+"""Main RCA Agent using deepagents - Orchestrator for Multi-Database Diagnosis"""
 from deepagents import create_deep_agent
 from app.agents.subagents import (
     performance_analyzer,
@@ -8,12 +8,13 @@ from app.agents.subagents import (
 )
 from app.core.config import settings
 from app.core.database import db_manager
+from app.core.llm_factory import create_llm
 
 
 def create_rca_agent():
     """Create the main RCA agent with all sub-agents"""
 
-    system_prompt = """You are the MySQL Root Cause Analysis (RCA) Expert. Your role is to diagnose MySQL database issues comprehensively.
+    system_prompt = """You are the Multi-Database Root Cause Analysis (RCA) Expert. Your role is to diagnose database issues comprehensively across MySQL, PostgreSQL, Informix, and other databases.
 
 You have access to four specialized sub-agents:
 1. **performance-analyzer**: Analyzes performance metrics, slow queries, and resource usage
@@ -82,8 +83,15 @@ Always structure your final analysis as:
 [Metrics and alerts to track going forward]
 """
 
-    agent = create_deep_agent(
+    # Create LLM using factory (supports OpenAI, Deepseek, Anthropic, Ollama, etc.)
+    llm = create_llm(
+        provider=settings.llm.provider,
         model=settings.llm.model,
+        api_key=settings.llm.api_key,
+    )
+
+    agent = create_deep_agent(
+        model=llm,  # Pass the LLM instance instead of model string
         system_prompt=system_prompt,
         subagents=[
             performance_analyzer,

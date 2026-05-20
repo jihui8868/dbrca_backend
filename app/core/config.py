@@ -79,11 +79,50 @@ class DatabaseConfig:
 
 @dataclass
 class LLMConfig:
-    """LLM configuration"""
-    model: str = os.getenv("LLM_MODEL", "gpt-4")
-    api_key: str = os.getenv("OPENAI_API_KEY", "")
+    """Universal LLM configuration supporting OpenAI, Deepseek, and others"""
+
+    # Provider options: openai, deepseek, anthropic, ollama, etc.
+    provider: str = os.getenv("LLM_PROVIDER", "deepseek")
+
+    # Model selection (format: "provider:model-name")
+    # Examples:
+    #   openai:gpt-4
+    #   openai:gpt-4-turbo
+    #   deepseek:deepseek-chat
+    #   deepseek:deepseek-coder
+    #   anthropic:claude-opus-4
+    model: str = os.getenv("LLM_MODEL", "deepseek:deepseek-chat")
+
+    # API Keys (different providers use different env vars)
+    openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
+    deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
+    anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
+
+    # Deepseek specific
+    deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+
+    # Model parameters
     temperature: float = float(os.getenv("LLM_TEMPERATURE", "0.7"))
     max_tokens: int = int(os.getenv("LLM_MAX_TOKENS", "2048"))
+    top_p: float = float(os.getenv("LLM_TOP_P", "1.0"))
+    timeout: int = int(os.getenv("LLM_TIMEOUT", "30"))
+
+    # Retry configuration
+    max_retries: int = int(os.getenv("LLM_MAX_RETRIES", "3"))
+
+    @property
+    def api_key(self) -> str:
+        """Get API key for the configured provider"""
+        provider = self.provider.lower()
+
+        if provider == "openai":
+            return self.openai_api_key
+        elif provider == "deepseek":
+            return self.deepseek_api_key
+        elif provider == "anthropic":
+            return self.anthropic_api_key
+        else:
+            return self.openai_api_key  # Default fallback
 
 
 @dataclass
