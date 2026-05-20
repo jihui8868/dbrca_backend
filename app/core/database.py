@@ -1,35 +1,70 @@
-"""Database connection management"""
-import pymysql
+"""Universal database connection management supporting multiple database types"""
 from typing import Optional, Dict, List, Any
 from sqlalchemy import create_engine, text, MetaData
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import QueuePool
+from sqlalchemy.pool import QueuePool, NullPool
 
 from .config import settings
+from .database_types import (
+    DatabaseType,
+    get_dialect,
+    detect_database_type,
+    DatabaseDialect,
+)
 
 
-class DatabaseManager:
-    """Manages MySQL database connections and operations"""
+class UniversalDatabaseManager:
+    """
+    Universal database manager supporting MySQL, PostgreSQL, Informix, and others.
+    Uses strategy pattern to handle different database dialects.
+    """
 
-    def __init__(self):
+    def __init__(self, dsn: Optional[str] = None):
+        """
+        Initialize database manager
+
+        Args:
+            dsn: Database connection string. If not provided, uses settings.database.dsn
+        """
+        self.dsn = dsn or settings.database.dsn
+        self.db_type = detect_database_type(self.dsn)
+        self.dialect = get_dialect(self.db_type)
+
         self.engine = None
         self.SessionLocal = None
         self.metadata = MetaData()
+
         self._initialize_engine()
 
     def _initialize_engine(self):
-        """Initialize SQLAlchemy engine"""
+        """Initialize SQLAlchemy engine with database-specific settings"""
+        # Get database-specific connection arguments
+        connect_args = self.dialect.get_connection_args()
+
+        # Additional standard arguments
+        connect_args.update({
+            "connect_timeout": 10,
+        })
+
+        # Select appropriate connection pool
+        pool_class = QueuePool
+        pool_kwargs = {
+            "pool_size": settings.database.pool_size,
+            "max_overflow": settings.database.max_overflow,
+        }
+
+        # PostgreSQL often works better with NullPool in certain scenarios
+        if self.db_type == DatabaseType.POSTGRESQL:
+            pool_class = QueuePool
+
         self.engine = create_engine(
-            settings.database.dsn,
-            poolclass=QueuePool,
-            pool_size=settings.database.pool_size,
-            max_overflow=settings.database.max_overflow,
+            self.dsn,
+            poolclass=pool_class,
             echo=settings.agent.debug,
-            connect_args={
-                "charset": "utf8mb4",
-                "connect_timeout": 10,
-            }
+            connect_args=connect_args,
+            **pool_kwargs
         )
+
         self.SessionLocal = sessionmaker(
             bind=self.engine,
             autocommit=False,
@@ -45,13 +80,23 @@ class DatabaseManager:
         try:
             with self.get_session() as session:
                 session.execute(text("SELECT 1"))
+            print(f"✓ Connected to {self.db_type.value} database")
             return True
         except Exception as e:
-            print(f"Database connection failed: {e}")
+            print(f"✗ Database connection failed: {e}")
             return False
 
     def execute_query(self, query: str, session: Optional[Session] = None) -> List[Dict[str, Any]]:
-        """Execute a read query"""
+        """
+        Execute a read query
+
+        Args:
+            query: SQL query to execute
+            session: Optional existing session
+
+        Returns:
+            List of dictionaries with query results
+        """
         should_close = False
         if session is None:
             session = self.get_session()
@@ -62,12 +107,24 @@ class DatabaseManager:
             rows = result.fetchall()
             columns = result.keys()
             return [dict(zip(columns, row)) for row in rows]
+        except Exception as e:
+            print(f"Query execution error: {e}")
+            return []
         finally:
             if should_close:
                 session.close()
 
     def execute_command(self, command: str, session: Optional[Session] = None) -> bool:
-        """Execute a write command"""
+        """
+        Execute a write command (INSERT, UPDATE, DELETE)
+
+        Args:
+            command: SQL command to execute
+            session: Optional existing session
+
+        Returns:
+            True if successful, False otherwise
+        """
         should_close = False
         if session is None:
             session = self.get_session()
@@ -85,89 +142,101 @@ class DatabaseManager:
             if should_close:
                 session.close()
 
-    def get_database_size(self) -> Dict[str, Any]:
-        """Get database size information"""
-        query = """
-        SELECT
-            table_schema,
-            ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) as size_mb
-        FROM information_schema.tables
-        GROUP BY table_schema
-        """
+    def get_database_size(self) -> List[Dict[str, Any]]:
+        """Get database size information using dialect-specific query"""
+        query = self.dialect.get_database_size_query()
         return self.execute_query(query)
 
     def get_slow_queries(self, limit: int = 10) -> List[Dict[str, Any]]:
-        """Get slow queries from performance schema"""
-        query = f"""
-        SELECT
-            digest_text,
-            count_star,
-            avg_timer_wait / 1000000000000 as avg_time_sec,
-            max_timer_wait / 1000000000000 as max_time_sec
-        FROM performance_schema.events_statements_summary_by_digest
-        ORDER BY sum_timer_wait DESC
-        LIMIT {limit}
-        """
+        """Get slow queries using dialect-specific query"""
         try:
+            query = self.dialect.get_slow_queries_query(limit)
             return self.execute_query(query)
         except Exception as e:
             print(f"Failed to fetch slow queries: {e}")
             return []
 
     def get_table_statistics(self) -> List[Dict[str, Any]]:
-        """Get table statistics"""
-        query = """
-        SELECT
-            table_schema,
-            table_name,
-            table_rows,
-            ROUND(((data_length + index_length) / 1024 / 1024), 2) as size_mb,
-            ROUND((data_free / 1024 / 1024), 2) as free_mb
-        FROM information_schema.tables
-        WHERE table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys')
-        """
-        return self.execute_query(query)
+        """Get table statistics using dialect-specific query"""
+        try:
+            query = self.dialect.get_table_statistics_query()
+            return self.execute_query(query)
+        except Exception as e:
+            print(f"Failed to fetch table statistics: {e}")
+            return []
 
     def get_process_list(self) -> List[Dict[str, Any]]:
-        """Get current MySQL process list"""
-        query = """
-        SELECT
-            id,
-            user,
-            host,
-            db,
-            command,
-            time,
-            state,
-            left(info, 100) as info
-        FROM information_schema.processlist
-        ORDER BY time DESC
-        """
-        return self.execute_query(query)
+        """Get current process list using dialect-specific query"""
+        try:
+            query = self.dialect.get_process_list_query()
+            return self.execute_query(query)
+        except Exception as e:
+            print(f"Failed to fetch process list: {e}")
+            return []
 
     def get_lock_info(self) -> List[Dict[str, Any]]:
-        """Get lock information"""
-        query = """
-        SELECT
-            waiting_trx_id,
-            waiting_pid,
-            waiting_query,
-            blocking_trx_id,
-            blocking_pid,
-            blocking_query
-        FROM sys.innodb_lock_waits
-        """
+        """Get lock information using dialect-specific query"""
         try:
+            query = self.dialect.get_lock_info_query()
             return self.execute_query(query)
         except Exception as e:
             print(f"Failed to fetch lock info: {e}")
             return []
 
+    def get_error_log(self) -> List[Dict[str, Any]]:
+        """Get error log information using dialect-specific query"""
+        try:
+            query = self.dialect.get_error_log_query()
+            return self.execute_query(query)
+        except Exception as e:
+            print(f"Failed to fetch error log: {e}")
+            return []
+
+    def get_cache_efficiency(self) -> List[Dict[str, Any]]:
+        """Get cache efficiency metrics using dialect-specific query"""
+        try:
+            query = self.dialect.get_cache_efficiency_query()
+            return self.execute_query(query)
+        except Exception as e:
+            print(f"Failed to fetch cache efficiency: {e}")
+            return []
+
+    def get_index_usage(self) -> List[Dict[str, Any]]:
+        """Get index usage statistics using dialect-specific query"""
+        try:
+            query = self.dialect.get_index_usage_query()
+            return self.execute_query(query)
+        except Exception as e:
+            print(f"Failed to fetch index usage: {e}")
+            return []
+
     def get_variable(self, var_name: str) -> Optional[str]:
-        """Get MySQL variable value"""
-        query = f"SHOW VARIABLES LIKE '{var_name}'"
-        result = self.execute_query(query)
-        return result[0]['Value'] if result else None
+        """Get configuration variable value"""
+        try:
+            query = self.dialect.get_configuration_query(var_name)
+            results = self.execute_query(query)
+            if results:
+                # Database-specific result parsing
+                if self.db_type == DatabaseType.MYSQL:
+                    return results[0].get('Value')
+                elif self.db_type == DatabaseType.POSTGRESQL:
+                    return results[0].get('setting')
+                else:
+                    return results[0].get('value')
+            return None
+        except Exception as e:
+            print(f"Failed to fetch variable {var_name}: {e}")
+            return None
+
+    def get_database_info(self) -> Dict[str, Any]:
+        """Get database information"""
+        return {
+            "type": self.db_type.value,
+            "host": self.engine.url.host,
+            "port": self.engine.url.port,
+            "database": self.engine.url.database,
+            "user": self.engine.url.username,
+        }
 
     def close(self):
         """Close database connections"""
@@ -175,4 +244,5 @@ class DatabaseManager:
             self.engine.dispose()
 
 
-db_manager = DatabaseManager()
+# Global database manager instance
+db_manager = UniversalDatabaseManager()
