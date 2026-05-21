@@ -13,6 +13,7 @@ dependencies = [
     "pymysql>=1.1.0",  # MySQL driver
     "uvicorn>=0.27.0",  # ASGI server
     "psycopg2-binary>=2.9.12",
+    "langchain-ollama>=1.1.0",
 ]
 
 [project.optional-dependencies]
