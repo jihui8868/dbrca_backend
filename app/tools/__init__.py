@@ -23,6 +23,18 @@ from .log_tools import (
     get_comprehensive_log_report,
 )
 
+from .query_tools import (
+    QueryAnalyzer,
+    get_query_complexity_report,
+    get_execution_plans_report,
+    get_join_patterns_report,
+    get_subquery_efficiency_report,
+    get_index_effectiveness_report,
+    get_query_statistics_report,
+    get_missing_indexes_report,
+    get_comprehensive_query_report,
+)
+
 __all__ = [
     # Performance tools
     "PerformanceMetrics",
@@ -43,4 +55,14 @@ __all__ = [
     "get_log_volume_report",
     "get_event_timeline_report",
     "get_comprehensive_log_report",
+    # Query tools
+    "QueryAnalyzer",
+    "get_query_complexity_report",
+    "get_execution_plans_report",
+    "get_join_patterns_report",
+    "get_subquery_efficiency_report",
+    "get_index_effectiveness_report",
+    "get_query_statistics_report",
+    "get_missing_indexes_report",
+    "get_comprehensive_query_report",
 ]
