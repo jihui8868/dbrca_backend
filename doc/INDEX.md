@@ -11,6 +11,10 @@
 
 ## 📖 核心功能文档
 
+### 子代理工具实现
+- [PERFORMANCE_TOOLS_GUIDE.md](./PERFORMANCE_TOOLS_GUIDE.md) - 性能分析工具使用指南
+- [LOG_TOOLS_GUIDE.md](./LOG_TOOLS_GUIDE.md) - 日志分析工具使用指南
+
 ### 多数据库支持
 - [MULTI_DATABASE_SUPPORT.md](./MULTI_DATABASE_SUPPORT.md) - 详细的多数据库支持指南
 - [MULTI_DATABASE_CHECKLIST.md](./MULTI_DATABASE_CHECKLIST.md) - 多数据库支持检查清单
@@ -99,6 +103,7 @@
 | 类别 | 数量 | 文件 |
 |------|------|------|
 | **快速开始** | 1 | 同步模式改造完成报告 |
+| **子代理工具** | 2 | PERFORMANCE_TOOLS_GUIDE, LOG_TOOLS_GUIDE |
 | **调试指南** | 3 | DEBUG, SYNC_MODE_MIGRATION, SYNC_MODE_VERIFICATION |
 | **多数据库** | 2 | MULTI_DATABASE_SUPPORT, MULTI_DATABASE_CHECKLIST |
 | **多 LLM** | 3 | LLM_INTEGRATION_SUMMARY, QUICK_START_LLM, USAGE_EXAMPLES |
@@ -107,7 +112,7 @@
 | **架构设计** | 3 | ARCHITECTURE, ARCHITECTURE_REVIEW, PROJECT_STRUCTURE |
 | **设置配置** | 3 | SYSTEM_SETUP, QUICKSTART, PROJECT_SUMMARY |
 | **会话总结** | 1 | SESSION_COMPLETION_SUMMARY |
-| **总计** | **21** | 个文档 |
+| **总计** | **23** | 个文档 |
 
 ---
 
@@ -136,9 +141,15 @@
 - ARCHITECTURE.md - 整体设计
 
 **"性能" 或 "优化":**
+- PERFORMANCE_TOOLS_GUIDE.md - 性能分析工具
 - ARCHITECTURE_REVIEW.md - 性能优化
 - SYNC_MODE_VERIFICATION.md - 性能对比
 - USAGE_EXAMPLES.md - 成本优化策略
+
+**"工具" 或 "分析":**
+- PERFORMANCE_TOOLS_GUIDE.md - 性能分析工具
+- LOG_TOOLS_GUIDE.md - 日志分析工具
+- DEEPAGENTS_IMPLEMENTATION.md - 代理工具框架
 
 **"安装" 或 "配置":**
 - SYSTEM_SETUP.md - 系统设置
@@ -158,9 +169,11 @@
 ### 深入学习（2-4 小时）
 1. [DEBUG_GUIDE.md](./DEBUG_GUIDE.md) - 掌握调试技巧 (30 分钟)
 2. [ARCHITECTURE.md](./ARCHITECTURE.md) - 理解架构 (30 分钟)
-3. [LLM_INTEGRATION_SUMMARY.md](./LLM_INTEGRATION_SUMMARY.md) - LLM 集成深度 (30 分钟)
-4. [MULTI_DATABASE_SUPPORT.md](./MULTI_DATABASE_SUPPORT.md) - 多数据库支持 (30 分钟)
-5. [USAGE_EXAMPLES.md](./USAGE_EXAMPLES.md) - 实战例子 (30 分钟)
+3. [PERFORMANCE_TOOLS_GUIDE.md](./PERFORMANCE_TOOLS_GUIDE.md) - 性能分析工具 (20 分钟)
+4. [LOG_TOOLS_GUIDE.md](./LOG_TOOLS_GUIDE.md) - 日志分析工具 (20 分钟)
+5. [LLM_INTEGRATION_SUMMARY.md](./LLM_INTEGRATION_SUMMARY.md) - LLM 集成深度 (30 分钟)
+6. [MULTI_DATABASE_SUPPORT.md](./MULTI_DATABASE_SUPPORT.md) - 多数据库支持 (30 分钟)
+7. [USAGE_EXAMPLES.md](./USAGE_EXAMPLES.md) - 实战例子 (30 分钟)
 
 ### 高级用途（4+ 小时）
 1. [DEEPAGENTS_IMPLEMENTATION.md](./DEEPAGENTS_IMPLEMENTATION.md) - 代理框架
@@ -183,7 +196,7 @@
 
 1. **中文文档** - 除了技术架构文档外，都有中文说明
 2. **代码示例** - 所有文档中的代码都已验证可运行
-3. **更新日期** - 文档最后更新于 2026-05-20
+3. **更新日期** - 文档最后更新于 2026-05-21
 
 ---
 
